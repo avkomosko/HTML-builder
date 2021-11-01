@@ -4,7 +4,7 @@ const stylePath = path.join(__dirname, 'styles');
 const dataArr = [];
 const outputPath = path.join(__dirname, 'project-dist', 'bundle.css');
 
-async function listDirectory() {
+async function bundleStyles() {
   try {
     const files = await fs.readdir(stylePath, { withFileTypes: true });
     for (const file of files) {
@@ -23,7 +23,16 @@ async function listDirectory() {
 
   const allData = await dataArr.join('');
 
-  appendFile(outputPath, allData);
+  try {
+    await fs.unlink(outputPath);
+    
+  } catch {
+    appendFile(outputPath, allData);
+   
+  } finally {
+    appendFile(outputPath, allData);
+  }
+  
 
   async function readFile(fileName) {
     try {
@@ -43,4 +52,4 @@ async function listDirectory() {
   }
 }
 
-listDirectory();
+bundleStyles();
