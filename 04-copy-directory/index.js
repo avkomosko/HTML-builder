@@ -1,9 +1,10 @@
 const fs = require('fs').promises;
 const path = require('path');
-const dirPath = path.join(__dirname, 'files');
-const dirCopyPath = path.join(__dirname, 'files-copy');
 
-async function copyDirectory() {
+async function copyDirectory(source, copy) {
+  const dirPath = path.join(__dirname, source);
+  const dirCopyPath = path.join(__dirname, copy);
+
   try {
     await fs.mkdir(dirCopyPath, true);
   } catch {
@@ -24,7 +25,7 @@ async function copyDirectory() {
   async function removeFiles() {
     const fileCopies = await fs.readdir(dirCopyPath, { withFileTypes: true });
     if (fileCopies.length > 0) {
-      for (const file of fileCopies) {
+      for (let file of fileCopies) {
         if (file.isFile()) {
           let fileCopyPath = path.join(dirCopyPath, file.name);
           await fs.unlink(fileCopyPath);
@@ -50,4 +51,4 @@ async function copyDirectory() {
     }
   }
 }
-copyDirectory();
+copyDirectory('files', 'files-copy');
