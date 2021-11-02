@@ -17,7 +17,7 @@ async function copyDirectory(source, copy) {
     try {
       await fs.mkdir(copy, true);
     } catch (err) {
-      console.log('has been created dir', err.path);
+      return;
     }
   }
 
