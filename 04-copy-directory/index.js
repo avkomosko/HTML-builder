@@ -1,12 +1,11 @@
 const fs = require('fs').promises;
 const path = require('path');
+const dirPath = path.join(__dirname, 'files');
+const dirCopyPath = path.join(__dirname, 'files-copy');
 
 async function copyDirectory(source, copy) {
-  const dirPath = path.join(__dirname, source);
-  const dirCopyPath = path.join(__dirname, copy);
-
   try {
-    await fs.mkdir(dirCopyPath, true);
+    await fs.mkdir(copy, true);
   } catch {
     await removeFiles();
   } finally {
@@ -16,33 +15,33 @@ async function copyDirectory(source, copy) {
 
   async function createDir() {
     try {
-      await fs.mkdir(dirCopyPath, true);
+      await fs.mkdir(copy, true);
     } catch (err) {
       console.log('has been created dir', err.path);
     }
   }
 
   async function removeFiles() {
-    const fileCopies = await fs.readdir(dirCopyPath, { withFileTypes: true });
+    const fileCopies = await fs.readdir(copy, { withFileTypes: true });
     if (fileCopies.length > 0) {
       for (let file of fileCopies) {
         if (file.isFile()) {
-          let fileCopyPath = path.join(dirCopyPath, file.name);
+          let fileCopyPath = path.join(copy, file.name);
           await fs.unlink(fileCopyPath);
         }
       }
     }
-    await fs.rmdir(dirCopyPath);
+    await fs.rmdir(copy);
   }
 
   async function copyFiles() {
     try {
-      const files = await fs.readdir(dirPath, { withFileTypes: true });
-      for (const file of files) {
+      const files = await fs.readdir(source, { withFileTypes: true });
+      for (let file of files) {
         let isFile = file.isFile();
         if (isFile) {
-          let filePath = path.join(dirPath, file.name);
-          let fileCopyPath = path.join(dirCopyPath, file.name);
+          let filePath = path.join(source, file.name);
+          let fileCopyPath = path.join(copy, file.name);
           await fs.copyFile(filePath, fileCopyPath);
         }
       }
@@ -51,4 +50,7 @@ async function copyDirectory(source, copy) {
     }
   }
 }
-copyDirectory('files', 'files-copy');
+
+copyDirectory(dirPath, dirCopyPath);
+
+module.exports = copyDirectory;
