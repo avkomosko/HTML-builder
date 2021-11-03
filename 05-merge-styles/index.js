@@ -8,8 +8,7 @@ async function bundleStyles(stylesSourse, stylesOutput) {
   try {
     const files = await fs.readdir(stylesSourse, { withFileTypes: true });
     for (let file of files) {
-      let isFile = file.isFile();
-      if (isFile) {
+      if (file.isFile()) {
         let filePath = path.join(stylesSourse, file.name);
         let fileExt = path.extname(filePath);
         if (fileExt.slice(1) === 'css') {

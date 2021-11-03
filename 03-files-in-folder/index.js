@@ -6,8 +6,7 @@ async function listDirectory() {
   try {
     const files = await fs.readdir(dirPath, {withFileTypes: true});
     for (const file of files) {
-      let isFile = file.isFile();
-      if (isFile) {
+      if (file.isFile()) {
         let filePath = path.join(dirPath, file.name);
         let fileExt = path.extname(filePath);
         let filename = path.basename(filePath, fileExt);

@@ -13,15 +13,15 @@ fs.writeFile(filePath, '', (err) => {
 });
 
 function handleLine(filePath, data) {
-  if (data !== 'exit') {
+  if (data === 'exit') {
+    handleExit();
+  } else {
     fs.appendFile(filePath, `${data}\n`, (err) => {
       if (err) {
         throw err;
       }
     });
-  } else {
-    handleExit();
-  }
+  } 
 }
 
 rl.question('Hello! Enter your data:', (data) => {

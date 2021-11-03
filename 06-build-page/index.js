@@ -33,8 +33,7 @@ async function buildPage() {
     try {
       const files = await fs.readdir(dirPath, { withFileTypes: true });
       for (let file of files) {
-        let isFile = file.isFile();
-        if (isFile) {
+        if (file.isFile()) {
           let filePath = path.join(dirPath, file.name);
           await fs.unlink(filePath);
         }
@@ -52,13 +51,12 @@ async function buildPage() {
   async function getHtmlComponents(dirPath) {
     const files = await fs.readdir(dirPath, { withFileTypes: true });
     for (let file of files) {
-      let isFile = file.isFile();
-      if (isFile) {
+      if (file.isFile()) {
         let filePath = path.join(dirPath, file.name);
         let fileExt = path.extname(filePath);
         let filename = path.basename(filePath, fileExt);
         if (fileExt === '.html') {
-          let data = await fs.readFile(filePath, 'utf-8');
+          let data = await fs.readFile(filePath, { encoding: 'utf-8' });
           components[filename] = data;
         }
       }
@@ -100,11 +98,10 @@ async function buildPage() {
     await clearDir(assetsCopyPath);
     const files = await fs.readdir(assetsPath, { withFileTypes: true });
     for (let file of files) {
-      let isFile = file.isFile();
       let filePath = path.join(assetsPath, file.name);
       let fileExt = path.extname(filePath);
       let filename = path.basename(filePath, fileExt);
-      if (isFile) {
+      if (file.isFile()) {
         let fileCopyPath = path.join(assetsCopyPath, file.name);
         await fs.copyFile(filePath, fileCopyPath);
       } else {

@@ -38,8 +38,7 @@ async function copyDirectory(source, copy) {
     try {
       const files = await fs.readdir(source, { withFileTypes: true });
       for (let file of files) {
-        let isFile = file.isFile();
-        if (isFile) {
+        if (file.isFile()) {
           let filePath = path.join(source, file.name);
           let fileCopyPath = path.join(copy, file.name);
           await fs.copyFile(filePath, fileCopyPath);
