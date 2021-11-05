@@ -10,9 +10,8 @@ async function listDirectory() {
         let filePath = path.join(dirPath, file.name);
         let fileExt = path.extname(filePath);
         let filename = path.basename(filePath, fileExt);
-        let stat = fs.stat(filePath);
-        let fileSize = (Math.trunc(((await stat).size / 1024) * 1000) / 1000 );
-        console.log(`${filename} - ${fileExt.slice(1)} - ${fileSize}kb`);
+        let stat = await fs.stat(filePath);
+        console.log(`${filename} - ${fileExt.slice(1)} - ${stat.size}`);
       }
     }
   } catch (err) {
