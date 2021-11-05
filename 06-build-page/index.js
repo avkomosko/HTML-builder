@@ -1,8 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const copyDirectory = require('../04-copy-directory/index.js');
-const bundleStyles = require('../05-merge-styles/index.js');
 const stylePath = path.join(__dirname, 'styles');
 const distPath = path.join(__dirname, 'project-dist');
 const outputStyles = path.join(__dirname, 'project-dist', 'style.css');
@@ -12,6 +10,17 @@ const assetsCopyPath = path.join(distPath, 'assets');
 async function buildPage() {
   let htmlTemplate = '';
   let components = {};
+
+  try {
+    makeDir(distPath);
+    bundleStyles(stylePath, outputStyles);
+    writeHtml();
+    clearDir(assetsCopyPath);
+    makeDir(assetsCopyPath);
+    copyDirectory(assetsPath, assetsCopyPath);
+  } catch (err) {
+    console.error(err);
+  }
 
   async function makeDir(path) {
     try {
@@ -30,17 +39,7 @@ async function buildPage() {
   }
 
   async function clearDir(dirPath) {
-    try {
-      const files = await fs.readdir(dirPath, { withFileTypes: true });
-      for (let file of files) {
-        if (file.isFile()) {
-          let filePath = path.join(dirPath, file.name);
-          await fs.unlink(filePath);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    await fs.rm(dirPath, { recursive: true, force: true });
   }
 
   async function readHtmltemp(filePath) {
@@ -62,7 +61,7 @@ async function buildPage() {
       }
     }
   }
-  
+
   async function createHtml() {
     await readHtmltemp(path.join(__dirname, 'template.html'));
     await getHtmlComponents(path.join(__dirname, 'components'));
@@ -78,39 +77,83 @@ async function buildPage() {
 
   async function writeHtml() {
     await createHtml();
-    let fileName = path.join(distPath, 'index.html');
+    let filePath = path.join(distPath, 'index.html');
     try {
-      await fs.stat(fileName);
-      await fs.unlink(fileName);
+      await fs.stat(filePath);
+      await fs.unlink(filePath);
     } catch (err) {
-      await fs.appendFile(fileName, '', 'utf-8');
+      await fs.appendFile(filePath, '', 'utf-8');
       return;
     } finally {
-      await fs.appendFile(fileName, htmlTemplate, 'utf-8');
+      await fs.appendFile(filePath, htmlTemplate, 'utf-8');
     }
   }
-  
-  try {
-    await makeDir(distPath);
-    bundleStyles(stylePath, outputStyles);
-    writeHtml();
-    await makeDir(assetsCopyPath);
-    await clearDir(assetsCopyPath);
-    const files = await fs.readdir(assetsPath, { withFileTypes: true });
-    for (let file of files) {
-      let filePath = path.join(assetsPath, file.name);
-      let fileExt = path.extname(filePath);
-      let filename = path.basename(filePath, fileExt);
-      if (file.isFile()) {
-        let fileCopyPath = path.join(assetsCopyPath, file.name);
-        await fs.copyFile(filePath, fileCopyPath);
-      } else {
-        await makeDir(path.join(assetsCopyPath, filename));
-        await copyDirectory(filePath, path.join(assetsCopyPath, filename));
+
+  async function copyDirectory(source, copy) {
+    try {
+      await fs.mkdir(copy, true);
+    } catch {
+      await removeFiles(copy);
+    } finally {
+      makeDir(copy);
+      copyFiles();
+    }
+
+    async function removeFiles(removePath) {
+      await fs.rm(removePath, { recursive: true, force: true });
+    }
+
+    async function copyFiles() {
+      try {
+        const files = await fs.readdir(source, { withFileTypes: true });
+        for (let file of files) {
+          let filePath = path.join(source, file.name);
+          let fileCopyPath = path.join(copy, file.name);
+          if (file.isFile()) {
+            await fs.copyFile(filePath, fileCopyPath);
+          } else {
+            await makeDir(path.join(copy, file.name));
+            copyDirectory(filePath, path.join(copy, file.name));
+          }
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
-  } catch (err) {
-    console.error(err);
+  }
+
+  async function bundleStyles(stylesSourse, stylesOutput) {
+    const dataArr = [];
+    try {
+      const files = await fs.readdir(stylesSourse, { withFileTypes: true });
+      for (let file of files) {
+        if (file.isFile()) {
+          let filePath = path.join(stylesSourse, file.name);
+          let fileExt = path.extname(filePath);
+          if (fileExt.slice(1) === 'css') {
+            const data = await fs.readFile(filePath, 'utf-8');
+            dataArr.push(data);
+          }
+        }
+      }
+      const allData = dataArr.join('\n');
+      updateStyles(allData);
+    } catch (err) {
+      console.error(err);
+    }
+
+    async function updateStyles(data) {
+      try {
+        await fs.unlink(stylesOutput);
+        appendFile(stylesOutput, data);
+      } catch {
+        appendFile(stylesOutput, data);
+      }
+    }
+
+    async function appendFile(fileName, data) {
+      await fs.appendFile(fileName, data, 'utf-8');
+    }
   }
 }
 
